@@ -4,40 +4,19 @@ void setup(){
     Serial.begin(9600); // the USB Serail communication between the PC and Photon 
     Serial1.begin(9600);// the Serail communication between the RFID IC and Photon 
 
-  pinMode(RFIDResetPin, OUTPUT);
-  //digitalWrite(RFIDResetPin, HIGH);
-digitalWrite(RFIDResetPin, HIGH);
+    pinMode(RFIDResetPin, OUTPUT);
+    digitalWrite(RFIDResetPin, HIGH);
 
 }
  
 void loop(){
 
-  char tagString[13];
-  int index = 0;
-  boolean reading = false;
+  //char tagString[13];
+  char* tagString;
+  //int index = 0;
+  //boolean reading = false;
 
-  while(Serial1.available() > 0){
-
-    int readByte = Serial1.read(); //read next available byte
-
-    if(readByte == 2) reading = true; //begining of tag
-    if(readByte == 3) reading = false; //end of tag
-
-    if(reading && readByte != 2 && readByte != 10 && readByte != 13){
-      //store the tag
-      tagString[index] = readByte;
-      index ++;
-    }
-    
-    if(reading == false)    // when it is done reading the serail stream
-    {
-        Serial.println("********************");
-        Serial.println('RFID Tag has been read. Tag responded with the following TagId:');
-        Serial.println(tagString);
-        Serial.println("********************");
-    }
-        
-    }
+  tagString = getRFIDTagName();
    
 
   checkTag(tagString); //Check if it is a match
@@ -45,15 +24,48 @@ void loop(){
   resetReader(); //eset the RFID reader
 }
 
+
+char* getRFIDTagName(){
+    while(Serial1.available() > 0){
+        int index = 0;
+        boolean reading = false;
+        char tagStr[13];
+        
+        int readByte = Serial1.read(); //read next available byte
+    
+        if(readByte == 2) reading = true; //begining of tag
+        if(readByte == 3) reading = false; //end of tag
+    
+        if(reading && readByte != 2 && readByte != 10 && readByte != 13){
+          //store the tag
+          tagStr[index] = readByte;
+          index ++;
+        }
+        
+        if(reading == false)    // when it is done reading the serail stream
+        {
+            Serial.println("********************");
+            Serial.println('RFID Tag has been read. Tag responded with the following TagId:');
+            Serial.println(tagStr);
+            Serial.println("********************");
+            
+            //return the RFID tag value
+            return tagStr;
+        }
+    }
+}
+
 void checkTag(char tag[]){
 ///////////////////////////////////
 //Check the read tag against known tags
-///////////////////////////////////
+/////////////////////////////////////
+    Serial.println("*******Check Tag***********");
+    Serial.println(tag); //read out any unknown tag
 
-  if(strlen(tag) == 0) return; //empty, no need to contunue
+    if(strlen(tag) == 0) return; //empty, no need to contunue
   
-  Serial.println(tag); //read out any unknown tag
-  return;
+    Serial.println(tag); //read out any unknown tag
+    return;
 }
 
 void resetReader(){
